@@ -1,5 +1,21 @@
+# Core ML/Computer Vision Libraries
 ultralytics>=8.0.0
-opencv-python>=4.8.0
-scikit-learn>=1.3.0
-matplotlib>=3.5.0
+opencv-python>=4.0.0
+numpy>=1.20.0
+scikit-learn>=1.0.0
+matplotlib>=3.0.0
+
+# PyTorch (CPU version - will install automatically)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Serial Communication
 pyserial>=3.5
+
+# Utilities
+pillow>=10.0.0
+pyyaml>=6.0
+
+# Additional dependencies that may be needed
+tqdm>=4.0.0
+
