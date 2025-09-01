@@ -4,10 +4,12 @@ import os
 import time
 from collections import deque
 
+use_model = 'yolov8n'
+
 class FaceDrowsinessDetector:
     def __init__(self, 
-                 face_model_path="yolov8m-face.pt",  # or "yolov8n-face.pt" for faster processing
-                 drowsiness_model_path="yolo_drowsiness/yolov8n_cls_drowsy/weights/best.pt"):
+                 face_model_path="yolov8m-face.pt",
+                 drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
         """
         Initialize face detection and drowsiness classification models
         
@@ -303,7 +305,7 @@ if __name__ == "__main__":
     # Initialize detector
     detector = FaceDrowsinessDetector(
         face_model_path='yolov8m-face.pt',
-        drowsiness_model_path='yolo_drowsiness/yolov8n_cls_drowsy/weights/best.pt'
+        drowsiness_model_path='yolo_drowsiness/'+use_model+'_cls_drowsy/weights/best.pt'
     )
 
     # Start webcam detection with 2-second samples

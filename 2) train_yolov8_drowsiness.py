@@ -6,6 +6,7 @@ import os
 # Use split dataset
 DATASET_PATH = 'split_dataset'
 CLASSES = ['Drowsy', 'Non Drowsy']
+class_mdl = 'yolov8n'
 
 # Check split folders
 for split in ['train', 'val', 'test']:
@@ -16,14 +17,16 @@ for split in ['train', 'val', 'test']:
         print(f"Found {split} class folder: {folder}, {len(os.listdir(folder))} images")
 
 # Train YOLOv8 classifier
-model = YOLO('yolov8m-cls.pt')
+
+
+model = YOLO(class_mdl+'-cls.pt')
 
 results = model.train(
     data=DATASET_PATH,
     epochs=20,
     imgsz=224,
     project='yolo_drowsiness',
-    name='yolov8m_cls_drowsy',
+    name=class_mdl+'_cls_drowsy',
     exist_ok=True,
     split='val'
 )
@@ -35,5 +38,5 @@ print(f"Top-5 Accuracy: {results.top5:.4f}")
 print(f"Fitness Score: {results.fitness:.4f}")
 
 # The best weights are automatically saved in the project directory
-best_weights_path = 'yolo_drowsiness/yolov8n_cls_drowsy/weights/best.pt'
+best_weights_path = 'yolo_drowsiness/'+class_mdl+'_cls_drowsy/weights/best.pt'
 print(f"Best weights saved at: {best_weights_path}")

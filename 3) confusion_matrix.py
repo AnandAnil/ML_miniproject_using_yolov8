@@ -3,14 +3,15 @@ import os
 import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
-
+test_model='yolov8n'
 # Paths
-MODEL_PATH = 'yolo_drowsiness/yolov8n_cls_drowsy/weights/best.pt'
+MODEL_PATH = 'yolo_drowsiness/'+test_model+'_cls_drowsy/weights/best.pt'
 DATASET_PATH = 'split_dataset'
 CLASSES = ['Drowsy', 'Non Drowsy']
 
 # Load model
 model = YOLO(MODEL_PATH)
+print(f'Model loaded from: {MODEL_PATH}')
 
 # Collect all images and true labels from train, val, test
 image_paths = []
