@@ -1,41 +1,38 @@
+import splitfolders
 import os
 import shutil
-import random
 
+# Configuration
 DATASET_PATH = 'Driver Drowsiness Dataset (DDD)'
 SPLIT_PATH = 'split_dataset'
-CLASSES = ['Drowsy', 'Non Drowsy']
-SPLITS = {'train': 0.7, 'val': 0.15, 'test': 0.15}
+TRAIN_RATIO = 0.7
+VAL_RATIO = 0.15
+TEST_RATIO = 0.15
 
-random.seed(42)
+# Remove existing split folder if it exists
+if os.path.exists(SPLIT_PATH):
+    shutil.rmtree(SPLIT_PATH)
+    print(f"Removed existing folder: {SPLIT_PATH}")
 
-for split in SPLITS:
-    for cls in CLASSES:
-        split_dir = os.path.join(SPLIT_PATH, split, cls)
-        os.makedirs(split_dir, exist_ok=True)
+print(f"Splitting dataset from '{DATASET_PATH}' to '{SPLIT_PATH}'")
+print(f"Split ratios - Train: {TRAIN_RATIO}, Validation: {VAL_RATIO}, Test: {TEST_RATIO}")
 
-for cls in CLASSES:
-    src_dir = os.path.join(DATASET_PATH, cls)
-    images = [f for f in os.listdir(src_dir) if f.lower().endswith('.png')]
-    random.shuffle(images)
-    n_total = len(images)
-    n_train = int(n_total * SPLITS['train'])
-    n_val = int(n_total * SPLITS['val'])
-    n_test = n_total - n_train - n_val
-    splits = {
-        'train': images[:n_train],
-        'val': images[n_train:n_train+n_val],
-        'test': images[n_train+n_val:]
-    }
-    for split, files in splits.items():
-        for fname in files:
-            src = os.path.join(src_dir, fname)
-            dst = os.path.join(SPLIT_PATH, split, cls, fname)
-            shutil.copy2(src, dst)
-    print(f"{cls}: {n_train} train, {n_val} val, {n_test} test images")
+# Split the dataset using splitfolders
+splitfolders.ratio(
+    DATASET_PATH,           # Input folder path
+    output=SPLIT_PATH,      # Output folder path
+    seed=42,               # Random seed for reproducibility
+    ratio=(TRAIN_RATIO, VAL_RATIO, TEST_RATIO),  # Train, validation, test ratios
+    group_prefix=None,      # To ignore prefix in file names
+    move=False             # Copy files instead of moving them
+)
 
 print("Dataset split complete. Structure:")
-for split in SPLITS:
-    for cls in CLASSES:
-        split_dir = os.path.join(SPLIT_PATH, split, cls)
-        print(split_dir, len(os.listdir(split_dir)), "images")
+for split in ['train', 'val', 'test']:
+    split_dir = os.path.join(SPLIT_PATH, split)
+    if os.path.exists(split_dir):
+        for cls in os.listdir(split_dir):
+            cls_dir = os.path.join(split_dir, cls)
+            if os.path.isdir(cls_dir):
+                count = len([f for f in os.listdir(cls_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+                print(f"{split}/{cls}: {count} images")

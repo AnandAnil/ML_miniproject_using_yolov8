@@ -15,6 +15,7 @@ pyserial>=3.5
 # Utilities
 pillow>=10.0.0
 pyyaml>=6.0
+split-folders>=0.5.0
 
 # Additional dependencies that may be needed
 tqdm>=4.0.0
