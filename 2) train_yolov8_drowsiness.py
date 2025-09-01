@@ -23,7 +23,7 @@ results = model.train(
     epochs=20,
     imgsz=224,
     project='yolo_drowsiness',
-    name='yolov8n_cls_drowsy',
+    name='yolov8m_cls_drowsy',
     exist_ok=True,
     split='val'
 )

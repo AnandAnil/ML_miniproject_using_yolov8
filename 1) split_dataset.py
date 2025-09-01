@@ -21,10 +21,10 @@ print(f"Split ratios - Train: {TRAIN_RATIO}, Validation: {VAL_RATIO}, Test: {TES
 splitfolders.ratio(
     DATASET_PATH,           # Input folder path
     output=SPLIT_PATH,      # Output folder path
-    seed=42,               # Random seed for reproducibility
+    seed=42,                # Random seed for reproducibility
     ratio=(TRAIN_RATIO, VAL_RATIO, TEST_RATIO),  # Train, validation, test ratios
     group_prefix=None,      # To ignore prefix in file names
-    move=False             # Copy files instead of moving them
+    move=False              # Copy files instead of moving them
 )
 
 print("Dataset split complete. Structure:")
