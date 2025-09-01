@@ -4,7 +4,7 @@ import os
 import time
 from collections import deque
 
-use_model = 'yolov8n'
+use_model = 'yolov8m'
 
 class FaceDrowsinessDetector:
     def __init__(self, 
