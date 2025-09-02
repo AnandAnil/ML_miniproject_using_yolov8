@@ -2,7 +2,6 @@ from ultralytics import YOLO
 import cv2
 import os
 import time
-from collections import deque
 
 use_model = 'yolov8m'
 
@@ -117,12 +116,6 @@ class FaceDrowsinessDetector:
         start_time = time.time()
         last_reset_time = start_time
         
-        # FPS tracking
-        fps_start_time = start_time
-        fps_frame_count = 0
-        current_fps = 0
-        last_fps_update = start_time
-        
         # Per-sample tracking (resets every N seconds)
         sample_frame_count = 0
         sample_drowsy_count = 0
@@ -130,8 +123,7 @@ class FaceDrowsinessDetector:
         
         # Overall session tracking
         total_samples = 0
-        total_drowsy_percentage = 0
-        
+
         # Current sample data
         current_drowsy_percentage = 0
         last_completed_sample_info = ""
@@ -144,14 +136,7 @@ class FaceDrowsinessDetector:
             
             current_time = time.time()
             sample_frame_count += 1
-            fps_frame_count += 1
-            
-            # Calculate FPS every second
-            if current_time - last_fps_update >= 1.0:
-                current_fps = fps_frame_count / (current_time - last_fps_update)
-                fps_frame_count = 0
-                last_fps_update = current_time
-            
+                        
             # Check if we need to reset for new sample period
             if current_time - last_reset_time >= sample_duration:
                 # Calculate percentage for the completed sample
@@ -159,13 +144,11 @@ class FaceDrowsinessDetector:
                     current_drowsy_percentage = (sample_drowsy_count / (sample_drowsy_count + sample_alert_count)) * 100 if (sample_drowsy_count + sample_alert_count) > 0 else 0
                     
                     # Update overall session averages
-                    total_samples += 1
-                    total_drowsy_percentage = ((total_drowsy_percentage * (total_samples - 1)) + current_drowsy_percentage) / total_samples
-                    
+                    total_samples += 1                    
                     # Store the completed sample results
                     total_detections = sample_drowsy_count + sample_alert_count
                     last_completed_sample_info = f"Last {sample_duration}s Sample: {current_drowsy_percentage:.1f}% Drowsy ({sample_drowsy_count}D/{sample_alert_count}A/{total_detections}T)\\n"
-                    last_completed_sample_info += f"Session Average: {total_drowsy_percentage:.1f}% Drowsy | Samples: {total_samples} | FPS: {current_fps:.1f}"
+                    last_completed_sample_info += f"Samples: {total_samples}"
                     show_results = True
                 
                 # Reset for new sample period
@@ -176,7 +159,6 @@ class FaceDrowsinessDetector:
             
             # Detect faces
             faces = self.detect_faces(frame)
-            current_faces = len(faces)
             
             # Process each detected face
             for face in faces:
@@ -224,9 +206,9 @@ class FaceDrowsinessDetector:
                 info_text = last_completed_sample_info
             else:
                 # Show collecting data message during sample period
-                info_text = f"Collecting data... Time remaining: {time_remaining:.1f}s | FPS: {current_fps:.1f}\\n"
+                info_text = f"Collecting data... Time remaining: {time_remaining:.1f}s\\n"
                 if total_samples > 0:
-                    info_text += f"Session Average: {total_drowsy_percentage:.1f}% Drowsy | Completed Samples: {total_samples}"
+                    info_text += f"Completed Samples: {total_samples}"
                 else:
                     info_text += "Waiting for first sample to complete..."
             
