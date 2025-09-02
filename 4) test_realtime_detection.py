@@ -1,23 +1,25 @@
 from ultralytics import YOLO
 import cv2
 import os
+import sys
 import time
 
 use_model = 'yolov8m'
 
 class FaceDrowsinessDetector:
-    def __init__(self, 
-                 face_model_path="yolov8m-face.pt",
-                 drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
-        # Load face detection model
-        self.face_model = YOLO(face_model_path)
-        
-        # Load drowsiness classification model (after training)
+    def __init__(self,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
+        if os.path.exists(face_model_path):
+            self.face_model = YOLO(face_model_path)
+        else:
+            print("Face Detection model not found. Please download it from github ( Yusepp/YOLOv8-Face/"+use_model+" )")
+            sys.exit(1)
+
         if drowsiness_model_path and os.path.exists(drowsiness_model_path):
             self.drowsiness_model = YOLO(drowsiness_model_path)
         else:
             self.drowsiness_model = None
-            print("Drowsiness model not loaded. Train it first using your training script.")
+            print("Drowsiness model not loaded. Train it first using the training scripts.")
+            sys.exit(1)
             
     def detect_faces(self, image, conf_threshold=0.5):
         results = self.face_model(image, conf=conf_threshold)
@@ -26,7 +28,6 @@ class FaceDrowsinessDetector:
         for result in results:
             if result.boxes is not None:
                 for box in result.boxes:
-                    # Get bounding box coordinates
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
                     conf = box.conf[0].cpu().numpy()
                     
@@ -41,17 +42,13 @@ class FaceDrowsinessDetector:
         if self.drowsiness_model is None:
             return "Model not loaded", 0.0
         
-        # Resize face crop to model input size
         face_resized = cv2.resize(face_crop, (224, 224))
-        
-        # Run drowsiness classification
         results = self.drowsiness_model(face_resized)
         
         if results and len(results) > 0:
-            # Get prediction
             probs = results[0].probs
             if probs is not None:
-                class_names = ['Drowsy', 'Non Drowsy']  # Adjust based on your classes
+                class_names = ['Drowsy', 'Non Drowsy']
                 predicted_class = class_names[probs.top1]
                 confidence = probs.top1conf.cpu().numpy()
                 return predicted_class, float(confidence)
@@ -147,8 +144,7 @@ class FaceDrowsinessDetector:
                     total_samples += 1                    
                     # Store the completed sample results
                     total_detections = sample_drowsy_count + sample_alert_count
-                    last_completed_sample_info = f"Last {sample_duration}s Sample: {current_drowsy_percentage:.1f}% Drowsy ({sample_drowsy_count}D/{sample_alert_count}A/{total_detections}T)\\n"
-                    last_completed_sample_info += f"Samples: {total_samples}"
+                    last_completed_sample_info = f"Last {sample_duration}s Sample: {current_drowsy_percentage:.1f}% Drowsy ({sample_drowsy_count}D/{sample_alert_count}A/{total_detections}T)\\nSamples taken till now: {total_samples}"
                     show_results = True
                 
                 # Reset for new sample period
@@ -226,7 +222,7 @@ class FaceDrowsinessDetector:
         cap.release()
         cv2.destroyAllWindows()
 
-if __name__ == "__main__":
+def main():
     print("Face Drowsiness Detection - Real-time Testing")
     print("Starting webcam drowsiness detection...")
     print("Press 'q' to quit")
@@ -239,3 +235,6 @@ if __name__ == "__main__":
 
     # Start webcam detection with 2-second samples
     detector.process_video(0, sample_duration=2)
+
+if __name__ == "__main__":
+    main()
