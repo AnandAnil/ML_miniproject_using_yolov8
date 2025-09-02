@@ -6,7 +6,7 @@ import os
 # Use split dataset
 DATASET_PATH = 'split_dataset'
 CLASSES = ['Drowsy', 'Non Drowsy']
-class_mdl = 'yolov8n'
+class_mdl = 'yolov8m'
 
 # Check split folders
 for split in ['train', 'val', 'test']:

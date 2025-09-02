@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
-test_model='yolov8n'
+test_model='yolov8m'
 # Paths
 MODEL_PATH = 'yolo_drowsiness/'+test_model+'_cls_drowsy/weights/best.pt'
 DATASET_PATH = 'split_dataset'
