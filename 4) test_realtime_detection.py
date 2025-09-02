@@ -10,13 +10,6 @@ class FaceDrowsinessDetector:
     def __init__(self, 
                  face_model_path="yolov8m-face.pt",
                  drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
-        """
-        Initialize face detection and drowsiness classification models
-        
-        Args:
-            face_model_path: Path to YOLOv8 face detection model
-            drowsiness_model_path: Path to trained drowsiness classification model
-        """
         # Load face detection model
         self.face_model = YOLO(face_model_path)
         
@@ -26,26 +19,8 @@ class FaceDrowsinessDetector:
         else:
             self.drowsiness_model = None
             print("Drowsiness model not loaded. Train it first using your training script.")
-        
-        # Drowsiness tracking system
-        self.drowsiness_history = deque(maxlen=60)  # Store last 60 frames (2 seconds at 30fps)
-        self.last_alert_time = 0
-        self.alert_cooldown = 3.0  # 3 seconds between alerts
-        self.current_alert_status = None
-        self.alert_start_time = 0
-        self.alert_duration = 3.0  # Show alert for 3 seconds
-    
-    def detect_faces(self, image, conf_threshold=0.5):
-        """
-        Detect faces in the image
-        
-        Args:
-            image: Input image (numpy array)
-            conf_threshold: Confidence threshold for face detection
             
-        Returns:
-            List of face bounding boxes and confidences
-        """
+    def detect_faces(self, image, conf_threshold=0.5):
         results = self.face_model(image, conf=conf_threshold)
         faces = []
         
@@ -64,15 +39,6 @@ class FaceDrowsinessDetector:
         return faces
     
     def classify_drowsiness(self, face_crop):
-        """
-        Classify if the face shows drowsiness
-        
-        Args:
-            face_crop: Cropped face image
-            
-        Returns:
-            Drowsiness prediction and confidence
-        """
         if self.drowsiness_model is None:
             return "Model not loaded", 0.0
         
@@ -94,18 +60,6 @@ class FaceDrowsinessDetector:
         return "Unknown", 0.0
     
     def draw_info_textbox(self, frame, info_text="", box_color=(50, 50, 50), text_color=(255, 255, 255)):
-        """
-        Draw a customizable text box at the top of the frame
-        
-        Args:
-            frame: Input frame to draw on
-            info_text: Text to display (can be multiple lines separated by \\n)
-            box_color: Background color of the text box (B, G, R)
-            text_color: Text color (B, G, R)
-            
-        Returns:
-            Frame with text box overlay
-        """
         if not info_text:
             return frame
             
@@ -156,13 +110,6 @@ class FaceDrowsinessDetector:
         return frame
     
     def process_video(self, video_path, sample_duration=2):
-        """
-        Process video for real-time face detection and drowsiness classification
-        
-        Args:
-            video_path: Path to input video or 0 for webcam
-            sample_duration: Duration in seconds to calculate drowsiness percentage (default: 2)
-        """
         # Open video
         cap = cv2.VideoCapture(video_path)
         
