@@ -86,6 +86,100 @@ except ImportError as e:
     sys.exit(1)
 "
 
+# Download YOLOv8m Face Detection Model
+echo ""
+echo "📥 Downloading YOLOv8m Face Detection Model..."
+echo "🎯 Target: YOLOv8m model from Yusepp's Google Drive"
+
+# Check if gdown is installed, if not install it
+echo "🔧 Installing gdown for Google Drive downloads..."
+pip install gdown
+
+# Create models directory
+mkdir -p models
+
+echo "📥 Starting download with gdown..."
+echo "🔗 Using Python script for reliable Google Drive download"
+echo ""
+
+# Run the Python download script
+python << 'EOF'
+import gdown
+import os
+import sys
+
+# Google Drive file ID for YOLOv8m face model from Yusepp
+file_id = "1IJZBcyMHGhzAi0G4aZLcqryqZSjPsps-"
+output_file = "models/yolov8m-face.pt"
+
+# Google Drive download URL
+url = f"https://drive.google.com/uc?id={file_id}"
+
+print(f"🔗 Download URL: {url}")
+print(f"📁 Output file: {output_file}")
+print("⏳ Downloading... This may take a few minutes (197 MB)")
+print("")
+
+try:
+    # Download with gdown
+    gdown.download(url, output_file, quiet=False)
+    
+    # Check if file exists and has reasonable size
+    if os.path.exists(output_file):
+        file_size = os.path.getsize(output_file)
+        file_size_mb = file_size / (1024 * 1024)
+        
+        print(f"\n✅ Download completed!")
+        print(f"📁 File: {output_file}")
+        print(f"📏 Size: {file_size_mb:.2f} MB")
+        
+        if file_size_mb > 100:  # Expected size around 197MB
+            print("🎯 SUCCESS! File size looks correct for YOLOv8m model!")
+            sys.exit(0)
+        else:
+            print("⚠️  File seems too small, might be incomplete.")
+            sys.exit(1)
+    else:
+        print("❌ File not found after download")
+        sys.exit(1)
+        
+except Exception as e:
+    print(f"❌ Download failed: {str(e)}")
+    print("\n💡 Trying alternative method...")
+    
+    # Try fuzzy download (handles confirmation pages)
+    try:
+        gdown.download(url, output_file, quiet=False, fuzzy=True)
+        
+        if os.path.exists(output_file):
+            file_size = os.path.getsize(output_file)
+            file_size_mb = file_size / (1024 * 1024)
+            print(f"\n✅ Alternative download completed!")
+            print(f"📏 Size: {file_size_mb:.2f} MB")
+            if file_size_mb > 100:
+                sys.exit(0)
+        
+    except Exception as e2:
+        print(f"❌ Alternative download also failed: {str(e2)}")
+        print(f"\n💡 Manual download required:")
+        print("   1. Visit: https://github.com/Yusepp/YOLOv8-Face")
+        print("   2. Click: 'YOLOv8 medium (v0.2)' Google Drive link")
+        print("   3. Download and save as: models/yolov8m-face.pt")
+        sys.exit(1)
+EOF
+
+# Check Python script exit code
+if [ $? -eq 0 ]; then
+    echo ""
+    echo "✅ YOLOv8m face model downloaded successfully!"
+    echo "📁 Location: models/yolov8m-face.pt"
+    echo "🔗 Source: https://github.com/Yusepp/YOLOv8-Face"
+else
+    echo ""
+    echo "⚠️  Face model download failed, but installation continues..."
+    echo "💡 You can download manually later from: https://github.com/Yusepp/YOLOv8-Face"
+fi
+
 echo ""
 echo "🎉 Installation completed successfully!"
 echo "=================================================="
@@ -101,7 +195,10 @@ echo "      python '3) confusion_matrix.py'"
 echo "      python '4) test_realtime_detection.py'"
 echo "      python serialtest.py"
 echo ""
-echo "   3. Deactivate when done:"
+echo "   3. Face detection model location:"
+echo "      models/yolov8m-face.pt (automatically downloaded)"
+echo ""
+echo "   4. Deactivate when done:"
 echo "      deactivate"
 echo ""
 echo "🔧 Troubleshooting:"
