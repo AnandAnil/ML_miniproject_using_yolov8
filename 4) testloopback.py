@@ -1,37 +1,13 @@
 import serial
 import time
 
-possible_ports = [
-    # common ubuntu ports
-    '/dev/ttyUSB0',
-    '/dev/ttyUSB1',
-    '/dev/ttyUSB2',
-    '/dev/ttyUSB3',
-    '/dev/ttyUSB4',
-    '/dev/ttyUSB5',
-    '/dev/ttyACM0',
-    '/dev/ttyACM1',
-    '/dev/ttyACM2',
-    '/dev/ttyACM3',
-    '/dev/ttyACM4',
-    '/dev/ttyACM5',
-    # common windows ports
-    'COM1',
-    'COM2',
-    'COM3',
-    'COM4',
-    'COM5',
-    'COM6',
-    'COM7',
-    'COM8',
-    'COM9',
-    'COM10',
-    'COM11',
-    'COM12',
-    'COM13',
-    'COM14',
-    'COM15'
-]
+possible_ports = []
+for i in range(0,6):
+    possible_ports.append(f'/dev/ttyUSB{i}')
+for i in range(0,6):
+    possible_ports.append(f'/dev/ttyACM{i}')
+for i in range(0,16):
+    possible_ports.append(f'COM{i}')
 
 baud = 115200
 for port in possible_ports:
