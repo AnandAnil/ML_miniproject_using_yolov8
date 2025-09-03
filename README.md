@@ -11,4 +11,6 @@
    
  - You need to run `./install_sys.sh` in command prompt to install all
    libraries machine wide in ubuntu
+   
+ - All scripts are in the scripts folder
 
