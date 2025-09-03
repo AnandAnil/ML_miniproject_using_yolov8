@@ -12,11 +12,16 @@ torchvision>=0.15.0
 # Serial Communication
 pyserial>=3.5
 
+# Google Drive Downloads
+gdown>=4.0.0
+
 # Utilities
 pillow>=10.0.0
 pyyaml>=6.0
 split-folders>=0.5.0
+psutil>=5.8.0
 
 # Additional dependencies that may be needed
 tqdm>=4.0.0
+
 

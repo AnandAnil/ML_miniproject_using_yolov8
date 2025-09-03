@@ -9,7 +9,6 @@ use_model = 'yolov8m'
 
 class FaceDrowsinessDetector:
     def __init__(self,port='/dev/ttyUSB0',baud=115200,timeout=1,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
-        
         self.mcu_message = ''
         self.mcu_message_time = 0
         self.message_showed = False
@@ -28,11 +27,9 @@ class FaceDrowsinessDetector:
                 # Give mcu time to initialize
                 print(f"Waiting for {self.mcu_name} to initialize...")
                 time.sleep(2)
-
         except serial.SerialException as e:
             print(f"Could not connect to {port}: {e}")
             sys.exit(1)
-
         except Exception as e:
             print(f"Unexpected error with {port}: {e}")
             sys.exit(1)
@@ -89,9 +86,6 @@ class FaceDrowsinessDetector:
         return faces
     
     def classify_drowsiness(self, face_crop):
-        if self.drowsiness_model is None:
-            return "Model not loaded", 0.0
-        
         face_resized = cv2.resize(face_crop, (224, 224))
         results = self.drowsiness_model(face_resized)
         
@@ -102,7 +96,6 @@ class FaceDrowsinessDetector:
                 predicted_class = class_names[probs.top1]
                 confidence = probs.top1conf.cpu().numpy()
                 return predicted_class, float(confidence)
-        
         return "Unknown", 0.0
     
     def draw_info_textbox(self, frame, info_text="", box_color=(50, 50, 50), text_color=(255, 255, 255),bottom=False):
@@ -187,6 +180,7 @@ class FaceDrowsinessDetector:
             ret, frame = cap.read()
             if not ret:
                 break
+
             # check for new message each frame
             current_time = time.time()
             sample_frame_count += 1
@@ -195,9 +189,8 @@ class FaceDrowsinessDetector:
                 latest_mcu_msg = mcu_messages[-1]
                 self.mcu_message = f"{self.mcu_name}: {latest_mcu_msg}"
                 self.mcu_message_time = time.time()
-
+                
             if self.mcu_message and not self.message_showed and (current_time - self.mcu_message_time) < 5:
-                # Show the most recent message
                 frame = self.draw_info_textbox(frame, self.mcu_message, bottom=True)
             elif (current_time - self.mcu_message_time) >= 5:
                 self.mcu_message = ''
