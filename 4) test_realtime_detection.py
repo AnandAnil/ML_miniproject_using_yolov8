@@ -3,11 +3,40 @@ import cv2
 import os
 import sys
 import time
+import serial
 
 use_model = 'yolov8m'
 
 class FaceDrowsinessDetector:
-    def __init__(self,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
+    def __init__(self,port='/dev/ttyUSB0',baud=115200,timeout=1,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
+        
+        self.mcu_message = ''
+        self.mcu_message_time = 0
+        self.message_showed = False
+        self.connected_port = port
+        self.mcu_name = "ESP32"
+
+        try:
+            print(f"Trying to connect to {port}...")
+            self.ser=serial.Serial(port,baud,timeout=timeout)
+
+            if self.ser.is_open:
+                self.connected_port = port
+                self.is_connected = True
+                print(f"Successfully connected to {self.mcu_name} on {port} with baudrate {baud}")
+  
+                # Give mcu time to initialize
+                print(f"Waiting for {self.mcu_name} to initialize...")
+                time.sleep(2)
+
+        except serial.SerialException as e:
+            print(f"Could not connect to {port}: {e}")
+            sys.exit(1)
+
+        except Exception as e:
+            print(f"Unexpected error with {port}: {e}")
+            sys.exit(1)
+
         if os.path.exists(face_model_path):
             self.face_model = YOLO(face_model_path)
         else:
@@ -20,7 +49,28 @@ class FaceDrowsinessDetector:
             self.drowsiness_model = None
             print("Drowsiness model not loaded. Train it first using the training scripts.")
             sys.exit(1)
-            
+
+    def serialsend(self,char):
+        self.ser.write(char.encode())
+
+    def serialreceive(self):
+        messages = []
+        while self.ser.in_waiting > 0:
+            try:
+                message = self.ser.readline().decode().strip()
+                if message:  # Skip empty lines
+                    messages.append(message)
+                    self.message_showed = False
+            except:
+                break
+        return messages  # Returns list of all messages
+    
+    def disconnect(self):
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+            print(f"Disconnected from {self.connected_port}")
+            self.is_connected = False
+
     def detect_faces(self, image, conf_threshold=0.5):
         results = self.face_model(image, conf=conf_threshold)
         faces = []
@@ -55,7 +105,7 @@ class FaceDrowsinessDetector:
         
         return "Unknown", 0.0
     
-    def draw_info_textbox(self, frame, info_text="", box_color=(50, 50, 50), text_color=(255, 255, 255)):
+    def draw_info_textbox(self, frame, info_text="", box_color=(50, 50, 50), text_color=(255, 255, 255),bottom=False):
         if not info_text:
             return frame
             
@@ -81,12 +131,19 @@ class FaceDrowsinessDetector:
         box_width = max_width + (padding * 2)
         box_height = (len(lines) * line_height) + (padding * 2)
         
-        # Center the box horizontally
-        x1 = (w - box_width) // 2
-        y1 = 10
-        x2 = x1 + box_width
-        y2 = y1 + box_height
         
+        # Center the box horizontally
+        if not bottom:
+            x1 = (w - box_width) // 2
+            y1 = 10
+            x2 = x1 + box_width
+            y2 = y1 + box_height
+        else:
+            x1 = (w - box_width) // 2
+            y1 = h - box_height - 10
+            x2 = x1 + box_width
+            y2 = y1 + box_height
+
         # Draw semi-transparent background
         overlay = frame.copy()
         cv2.rectangle(overlay, (x1, y1), (x2, y2), box_color, -1)
@@ -130,16 +187,29 @@ class FaceDrowsinessDetector:
             ret, frame = cap.read()
             if not ret:
                 break
-            
+            # check for new message each frame
             current_time = time.time()
             sample_frame_count += 1
-                        
+            mcu_messages = self.serialreceive()
+            if mcu_messages:
+                latest_mcu_msg = mcu_messages[-1]
+                self.mcu_message = f"{self.mcu_name}: {latest_mcu_msg}"
+                self.mcu_message_time = time.time()
+
+            if self.mcu_message and not self.message_showed and (current_time - self.mcu_message_time) < 5:
+                # Show the most recent message
+                frame = self.draw_info_textbox(frame, self.mcu_message, bottom=True)
+            elif (current_time - self.mcu_message_time) >= 5:
+                self.mcu_message = ''
+                self.message_showed = True
+
             # Check if we need to reset for new sample period
             if current_time - last_reset_time >= sample_duration:
                 # Calculate percentage for the completed sample
                 if sample_frame_count > 0:
                     current_drowsy_percentage = (sample_drowsy_count / (sample_drowsy_count + sample_alert_count)) * 100 if (sample_drowsy_count + sample_alert_count) > 0 else 0
-                    
+                    if current_drowsy_percentage > 50:
+                        self.serialsend('H')
                     # Update overall session averages
                     total_samples += 1                    
                     # Store the completed sample results
@@ -219,6 +289,7 @@ class FaceDrowsinessDetector:
                 break
 
         # Clean up
+        self.disconnect()
         cap.release()
         cv2.destroyAllWindows()
 
