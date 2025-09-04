@@ -9,15 +9,15 @@ use_model = 'yolov8m'
 
 class FaceDrowsinessDetector:
     def __init__(self,port='/dev/ttyUSB0',baud=115200,timeout=1,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
-        self.mcu_message = ''
-        self.mcu_message_time = 0
-        self.message_showed = False
         self.connected_port = port
-        self.mcu_name = "ESP32"
         self.last_smell_time = 0
         self.smell_cooldown = 20
+        self.mcu_message_time = 0
+        self.message_showed = False
         self.more_data = False
-
+        self.mcu_name = "ESP32"
+        self.mcu_message = ''
+        
         try:
             print(f"Trying to connect to {port}...")
             self.ser=serial.Serial(port,baud,timeout=timeout)
