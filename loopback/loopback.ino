@@ -144,7 +144,7 @@ void updateStateMachine() {
     case SMELL_ATTACK_SERVO:
       if (elapsed >= 500) {
         Sprayer.write(0);
-        currentState = IDLE;
+        startHighAlert();
       }
       break;
   }
