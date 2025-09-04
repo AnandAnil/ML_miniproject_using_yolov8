@@ -1,40 +1,54 @@
+#include <ESP32Servo.h>
+
+Servo Sprayer;
+
+const int servoPin = 2;
+const int BuzzerPin = 4;
+
 void setup() {
-  // Initialize serial communication at 115200 baud rate
   Serial.begin(115200);
-  
-  // Wait for serial port to connect (useful for some boards)
-  while (!Serial) {
-    ; // wait for serial port to connect
+  while (!Serial) {;}
+  Sprayer.attach(servoPin, 500, 2400);
+  Sprayer.write(0);
+  Serial.println("Annoyance Machine Ready");
+  pinMode(BuzzerPin,OUTPUT);
+}
+
+void annoydriver(){
+  Serial.println("Annoying with buzzer");
+  for (int i = 0; i<=3; i++){
+    digitalWrite(BuzzerPin,HIGH);
+    delay(500);
+    digitalWrite(BuzzerPin,LOW);
+    delay(500);
   }
-  
-  // Send startup message
-  Serial.println("Arduino Ready - Loopback Test");
+  Serial.println("Annoyed with buzzer");
+  delay(200);
+}
+
+void attackdriver(){
+  Serial.println("Commencing ultimate attack");
+  Sprayer.write(180);
+  delay(500);
+  Sprayer.write(0);
+  Serial.println("Ultimate attack successful");
+  delay(500);
+  annoydriver();
 }
 
 void loop() {
-  // Check if data is available to read
   if (Serial.available()) {
-    // Read the incoming character
     char incomingMessage = Serial.read();
-    
-    // Echo back with more descriptive format
     Serial.print("Received: ");
     Serial.println(incomingMessage);
-    
-    // Optional: Add specific responses for drowsiness detection testing
     switch(incomingMessage) {
       case 'H':
-        Serial.println("HIGH_ALERT_ACTIVATED");
+        attackdriver();
         break;
       case 'M':
-        Serial.println("MEDIUM_ALERT_ACTIVATED");
+        annoydriver();
         break;
-      case 'N':
-        Serial.println("NORMAL_STATUS_SET");
-        break;
-      default:
-        Serial.println("UNKNOWN_COMMAND");
-        break;
+      default: break;
     }
   }
 }

@@ -68,6 +68,12 @@ class FaceDrowsinessDetector:
             print(f"Disconnected from {self.connected_port}")
             self.is_connected = False
 
+    def find_area_of_bbox(self, bbox):
+        x1, y1, x2, y2 = bbox
+        width = x2 - x1
+        height = y2 - y1
+        return width * height
+    
     def detect_faces(self, image, conf_threshold=0.5):
         results = self.face_model(image, conf=conf_threshold)
         faces = []
@@ -80,7 +86,8 @@ class FaceDrowsinessDetector:
                     
                     faces.append({
                         'bbox': [int(x1), int(y1), int(x2), int(y2)],
-                        'confidence': float(conf)
+                        'confidence': float(conf),
+                        'calculate': False
                     })
         
         return faces
@@ -201,8 +208,10 @@ class FaceDrowsinessDetector:
                 # Calculate percentage for the completed sample
                 if sample_frame_count > 0:
                     current_drowsy_percentage = (sample_drowsy_count / (sample_drowsy_count + sample_alert_count)) * 100 if (sample_drowsy_count + sample_alert_count) > 0 else 0
-                    if current_drowsy_percentage > 50:
+                    if current_drowsy_percentage > 70:
                         self.serialsend('H')
+                    elif current_drowsy_percentage > 40:
+                        self.serialsend('M')
                     # Update overall session averages
                     total_samples += 1                    
                     # Store the completed sample results
@@ -218,33 +227,38 @@ class FaceDrowsinessDetector:
             
             # Detect faces
             faces = self.detect_faces(frame)
-            
-            # Process each detected face
+            face_areas = []
+            if faces:
+                if len(faces) == 1:
+                    faces[0]['calculate'] = True
+                else:
+                    for face in faces:
+                        face_areas.append(self.find_area_of_bbox(face['bbox']))
+                    largest_face_index = face_areas.index(max(face_areas))
+                    faces[largest_face_index]['calculate'] = True
+
             for face in faces:
                 x1, y1, x2, y2 = face['bbox']
-                
+
                 # Crop face
                 face_crop = frame[y1:y2, x1:x2]
                 
                 if face_crop.size > 0:
                     # Classify drowsiness
-                    drowsy_class, drowsy_conf = self.classify_drowsiness(face_crop)
-                    
-                    # Count drowsy vs alert for current sample
-                    if drowsy_class == "Drowsy":
-                        sample_drowsy_count += 1
-                    elif drowsy_class == "Non Drowsy":
-                        sample_alert_count += 1
-                    
-                    # Choose color based on drowsiness
-                    if drowsy_class == "Drowsy":
-                        color = (0, 0, 255)  # Red for drowsy
-                        label = f"DROWSY {drowsy_conf:.2f}"
-                    elif drowsy_class == "Non Drowsy":
-                        color = (0, 255, 0)  # Green for alert
-                        label = f"ALERT {drowsy_conf:.2f}"
+                    if face['calculate']:
+                        drowsy_class, drowsy_conf = self.classify_drowsiness(face_crop)
+                        # Choose color based on drowsiness
+                        if drowsy_class == "Drowsy":
+                            color = (0, 0, 255)  # Red for drowsy
+                            label = f"DROWSY {drowsy_conf:.2f}"
+                            sample_drowsy_count += 1
+
+                        elif drowsy_class == "Non Drowsy":
+                            color = (0, 255, 0)  # Green for alert
+                            label = f"ALERT {drowsy_conf:.2f}"
+                            sample_alert_count += 1
                     else:
-                        color = (255, 255, 0)  # Yellow for unknown
+                        color = (0, 255, 255)  # Yellow for unknown
                         label = f"UNKNOWN"
                     
                     # Draw bounding box
