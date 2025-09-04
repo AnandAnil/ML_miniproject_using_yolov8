@@ -14,6 +14,9 @@ class FaceDrowsinessDetector:
         self.message_showed = False
         self.connected_port = port
         self.mcu_name = "ESP32"
+        self.last_smell_time = 0
+        self.smell_cooldown = 20
+        self.more_data = False
 
         try:
             print(f"Trying to connect to {port}...")
@@ -75,7 +78,7 @@ class FaceDrowsinessDetector:
         return width * height
     
     def detect_faces(self, image, conf_threshold=0.5):
-        results = self.face_model(image, conf=conf_threshold)
+        results = self.face_model(image, conf=conf_threshold, verbose=self.more_data)
         faces = []
         
         for result in results:
@@ -94,7 +97,7 @@ class FaceDrowsinessDetector:
     
     def classify_drowsiness(self, face_crop):
         face_resized = cv2.resize(face_crop, (224, 224))
-        results = self.drowsiness_model(face_resized)
+        results = self.drowsiness_model(face_resized, verbose=self.more_data)
         
         if results and len(results) > 0:
             probs = results[0].probs
@@ -209,7 +212,11 @@ class FaceDrowsinessDetector:
                 if sample_frame_count > 0:
                     current_drowsy_percentage = (sample_drowsy_count / (sample_drowsy_count + sample_alert_count)) * 100 if (sample_drowsy_count + sample_alert_count) > 0 else 0
                     if current_drowsy_percentage > 70:
-                        self.serialsend('H')
+                        if current_time - self.last_smell_time >= self.smell_cooldown:
+                            self.serialsend('S')
+                            self.last_smell_time = current_time
+                        else:
+                            self.serialsend('H')
                     elif current_drowsy_percentage > 40:
                         self.serialsend('M')
                     # Update overall session averages
@@ -286,6 +293,8 @@ class FaceDrowsinessDetector:
                     info_text += "Waiting for first sample to complete..."
             
             # Draw the info text box at the top
+            time_remains = self.smell_cooldown - (current_time-self.last_smell_time)
+            info_text += f"\\ntime remaining to redeploy smelly {max(0,time_remains):.1f}"
             frame = self.draw_info_textbox(frame, info_text)
             
             # Display frame
