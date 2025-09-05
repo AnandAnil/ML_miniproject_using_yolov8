@@ -32,7 +32,7 @@ def auto_detect_esp32():
         'DIAL'
     ]
     
-    print("🔍 Auto-detecting ESP32 port (CP2102/CH340 detection)...")
+    print("Auto-detecting ESP32 port (CP2102/CH340 detection)...")
     ports = serial.tools.list_ports.comports()
     
     candidates = []
@@ -44,13 +44,13 @@ def auto_detect_esp32():
         
         # Skip excluded devices (like Bluetooth)
         if any(excl in port_full for excl in exclusion_patterns):
-            print(f"⏭️  Skipping {port.device}: {port.description} (excluded device)")
+            print(f"Skipping {port.device}: {port.description} (excluded device)")
             continue
         
         # Check for ESP32 identifiers with scoring
         for identifier, score in esp32_identifiers:
             if identifier.upper() in port_full:
-                print(f"📍 Found ESP32 candidate on {port.device}: {port.description}")
+                print(f"Found ESP32 candidate on {port.device}: {port.description}")
                 candidates.append((port.device, score, port.description))
                 break
     
@@ -58,7 +58,7 @@ def auto_detect_esp32():
     candidates.sort(key=lambda x: x[1], reverse=True)
     
     for port_device, score, desc in candidates:
-        print(f"🧪 Testing {port_device} (score: {score})...")
+        print(f"Testing {port_device} (score: {score})...")
         
         for baud in [115200, 9600]:
             try:
@@ -67,8 +67,8 @@ def auto_detect_esp32():
                 ser.write(b'AT\r\n')
                 time.sleep(0.2)
                 ser.close()
-                print(f"✅ ESP32 confirmed on {port_device} at {baud} baud")
-                print(f"📋 Device: {desc}")
+                print(f"ESP32 confirmed on {port_device} at {baud} baud")
+                print(f"Device: {desc}")
                 return port_device, baud
             except Exception as e:
                 try:
@@ -77,8 +77,8 @@ def auto_detect_esp32():
                     pass
                 continue
     
-    print("❌ No ESP32 found. Manual port selection required.")
-    print("💡 Available ports:")
+    print("No ESP32 found. Manual port selection required.")
+    print("Available ports:")
     
     # Show all ports with analysis for debugging
     esp32_potential = []
@@ -91,34 +91,34 @@ def auto_detect_esp32():
         
         # Check if excluded
         if any(excl in port_full for excl in exclusion_patterns):
-            print(f"   � {port.device}: {port.description} (excluded)")
+            print(f"   {port.device}: {port.description} (excluded)")
             excluded_count += 1
         # Check if potential ESP32 but failed communication
         elif any(id_name.upper() in port_full for id_name, _ in esp32_identifiers):
-            print(f"   ⚠️  {port.device}: {port.description} (ESP32-like but no response)")
+            print(f"   {port.device}: {port.description} (ESP32-like but no response)")
             esp32_potential.append(port.device)
         else:
-            print(f"   �📱 {port.device}: {port.description}")
+            print(f"   {port.device}: {port.description}")
     
     # Give specific guidance
     if esp32_potential:
-        print(f"\n💡 Found {len(esp32_potential)} ESP32-like device(s) but no communication:")
+        print(f"\nFound {len(esp32_potential)} ESP32-like device(s) but no communication:")
         for port_dev in esp32_potential:
-            print(f"   🔧 Try manually: detector = FaceDrowsinessDetector(port='{port_dev}', baud=115200)")
-        print(f"   💭 Check: ESP32 powered on, correct drivers installed, Arduino code uploaded")
+            print(f"   Try manually: detector = FaceDrowsinessDetector(port='{port_dev}', baud=115200)")
+        print(f"   Check: ESP32 powered on, correct drivers installed, Arduino code uploaded")
     
     if excluded_count > 0:
-        print(f"\n✅ Correctly excluded {excluded_count} non-ESP32 device(s) (Bluetooth, etc.)")
+        print(f"\nCorrectly excluded {excluded_count} non-ESP32 device(s) (Bluetooth, etc.)")
     
     # Return platform-appropriate default (but warn user)
     import platform
     if platform.system() == 'Windows':
-        print(f"\n⚠️  Defaulting to COM1 - PLEASE VERIFY YOUR ESP32 PORT!")
-        print(f"🪟 Windows tip: Check Device Manager > Ports (COM & LPT) for 'Silicon Labs CP210x'")
+        print(f"\nDefaulting to COM1 - PLEASE VERIFY YOUR ESP32 PORT!")
+        print(f"Windows tip: Check Device Manager > Ports (COM & LPT) for 'Silicon Labs CP210x'")
         return 'COM1', 115200
     else:
-        print(f"\n⚠️  Defaulting to /dev/ttyUSB0 - please verify your ESP32 port!")
-        print(f"🐧 Linux tip: Run 'ls /dev/ttyUSB* /dev/ttyACM*' to see USB serial devices")
+        print(f"\nDefaulting to /dev/ttyUSB0 - please verify your ESP32 port!")
+        print(f"Linux tip: Run 'ls /dev/ttyUSB* /dev/ttyACM*' to see USB serial devices")
         return '/dev/ttyUSB0', 115200
 
 class FaceDrowsinessDetector:
