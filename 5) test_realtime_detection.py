@@ -77,39 +77,6 @@ def auto_detect_esp32():
                     pass
                 continue
     
-    print("No ESP32 found. Manual port selection required.")
-    print("Available ports:")
-    
-    # Show all ports with analysis for debugging
-    esp32_potential = []
-    excluded_count = 0
-    
-    for port in ports:
-        port_desc = port.description.upper()
-        port_hwid = port.hwid.upper()
-        port_full = f"{port_desc} {port_hwid}"
-        
-        # Check if excluded
-        if any(excl in port_full for excl in exclusion_patterns):
-            print(f"   {port.device}: {port.description} (excluded)")
-            excluded_count += 1
-        # Check if potential ESP32 but failed communication
-        elif any(id_name.upper() in port_full for id_name, _ in esp32_identifiers):
-            print(f"   {port.device}: {port.description} (ESP32-like but no response)")
-            esp32_potential.append(port.device)
-        else:
-            print(f"   {port.device}: {port.description}")
-    
-    # Give specific guidance
-    if esp32_potential:
-        print(f"\nFound {len(esp32_potential)} ESP32-like device(s) but no communication:")
-        for port_dev in esp32_potential:
-            print(f"   Try manually: detector = FaceDrowsinessDetector(port='{port_dev}', baud=115200)")
-        print(f"   Check: ESP32 powered on, correct drivers installed, Arduino code uploaded")
-    
-    if excluded_count > 0:
-        print(f"\nCorrectly excluded {excluded_count} non-ESP32 device(s) (Bluetooth, etc.)")
-    
     # Return platform-appropriate default (but warn user)
     import platform
     if platform.system() == 'Windows':
