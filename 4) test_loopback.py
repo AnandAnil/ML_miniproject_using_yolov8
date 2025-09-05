@@ -6,7 +6,7 @@ for i in range(0,6):
     possible_ports.append(f'/dev/ttyUSB{i}')
 for i in range(0,6):
     possible_ports.append(f'/dev/ttyACM{i}')
-for i in range(0,16):
+for i in range(5,16):
     possible_ports.append(f'COM{i}')
 
 baud = 115200
@@ -36,7 +36,7 @@ for char in test_chars:
     ser.write(char.encode())
     
     # Read response
-    time.sleep(0.001)
+    time.sleep(0.01)
     while ser.in_waiting > 0:
         response = ser.readline().decode().strip()
         print(f"Received: {response}")
