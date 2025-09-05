@@ -424,21 +424,11 @@ class FaceDrowsinessDetector:
         cv2.destroyAllWindows()
 
 def main():
-    print("🚗 Face Drowsiness Detection System - Real-time Testing")
-    print("=" * 55)
-    print("🎯 Features: Driver-focused detection, Smell attack safety")
-    print("🔧 Hardware: ESP32 auto-detection with CP2102/CH340 support")
-    print("🚫 Smart exclusion: Avoids Bluetooth COM ports automatically")
-    print("📱 Cross-platform: Windows, Linux, macOS compatible")
-    print("")
-    print("🎮 Controls: Press 'q' to quit, 's' for manual smell attack")
-    print("")
-    
     # Auto-detect ESP32 port with enhanced detection
-    print("🔍 Starting ESP32 auto-detection...")
+    print("Starting ESP32 auto-detection...")
     esp32_port, esp32_baud = auto_detect_esp32()
     
-    print(f"\n🔌 Connecting to ESP32...")
+    print(f"\nConnecting to ESP32...")
     
     # Initialize detector with auto-detected port
     detector = FaceDrowsinessDetector(
@@ -446,13 +436,7 @@ def main():
         baud=esp32_baud,
         face_model_path='yolov8m-face.pt',
         drowsiness_model_path='yolo_drowsiness/'+use_model+'_cls_drowsy/weights/best.pt'
-    )
-
-    print(f"\n🎥 Starting webcam detection with 2-second sampling...")
-    print(f"🛡️ Safety features: 20-second smell attack cooldown active")
-    print(f"👁️ Detection focus: Targeting largest face (driver)")
-    print("")
-    
+    )    
     # Start webcam detection with 2-second samples
     detector.process_video(0, sample_duration=2)
 
