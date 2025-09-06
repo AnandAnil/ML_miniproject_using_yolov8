@@ -5,56 +5,29 @@ import sys
 import time
 import serial
 import serial.tools.list_ports
+import platform
 
 use_model = 'yolov8m'
 
 def auto_detect_esp32():
-    """Auto-detect ESP32 port (Linux/Windows compatible) - Enhanced CP2102 detection"""
-    # Specific ESP32 USB-to-Serial identifiers with priority
-    esp32_identifiers = [
-        ('CP2102 USB to UART Bridge Controller', 10),  # Exact CP2102 match (highest priority)
-        ('CP210X', 9),                                 # Silicon Labs CP210x family
-        ('Silicon Labs CP210x', 9),                    # Full Silicon Labs name
-        ('CH340', 8),                                  # CH340 chips
-        ('CH341', 8),                                  # CH341 variant
-        ('USB2.0-Serial', 7),                          # Generic but common on ESP32
-        ('USB-SERIAL CH340', 8),                       # Specific CH340 variant
-        ('QinHeng Electronics', 7),                    # CH340 manufacturer
-    ]
-    
-    # Exclusion patterns for non-ESP32 devices
-    exclusion_patterns = [
-        'BLUETOOTH',
-        'BT',
-        'WIRELESS',
-        'MODEM',
-        'FAX',
-        'DIAL'
-    ]
-    
+    esp32_identifiers = [('CP2102 USB to UART Bridge Controller', 10),('CP210X', 9),('Silicon Labs CP210x', 9),('CH340', 8),('CH341', 8),('USB2.0-Serial', 7),('USB-SERIAL CH340', 8),('QinHeng Electronics', 7)]
+    exclusion_patterns = ['BLUETOOTH','BT','WIRELESS','MODEM','FAX','DIAL']
+    candidates = []
     print("Auto-detecting ESP32 port (CP2102/CH340 detection)...")
     ports = serial.tools.list_ports.comports()
-    
-    candidates = []
-    
     for port in ports:
         port_desc = port.description.upper()
         port_hwid = port.hwid.upper()
         port_full = f"{port_desc} {port_hwid}"
-        
-        # Skip excluded devices (like Bluetooth)
         if any(excl in port_full for excl in exclusion_patterns):
             print(f"Skipping {port.device}: {port.description} (excluded device)")
             continue
-        
-        # Check for ESP32 identifiers with scoring
         for identifier, score in esp32_identifiers:
             if identifier.upper() in port_full:
                 print(f"Found ESP32 candidate on {port.device}: {port.description}")
                 candidates.append((port.device, score, port.description))
                 break
-    
-    # Sort by score (highest first) and test communication
+
     candidates.sort(key=lambda x: x[1], reverse=True)
     
     for port_device, score, desc in candidates:
@@ -77,16 +50,21 @@ def auto_detect_esp32():
                     pass
                 continue
     
-    # Return platform-appropriate default (but warn user)
-    import platform
     if platform.system() == 'Windows':
-        print(f"\nDefaulting to COM1 - PLEASE VERIFY YOUR ESP32 PORT!")
-        print(f"Windows tip: Check Device Manager > Ports (COM & LPT) for 'Silicon Labs CP210x'")
-        return 'COM1', 115200
+        port_num = input(f"Check Device Manager > Ports (COM & LPT) for 'Silicon Labs CP210x' and enter here if found. If not found just hit enter: ")
+        port_desc = "COM" + port_num
+        if port_desc == "COM":
+            print("MCU Not connected")
+            sys.exit(1)
+        return port_desc, 115200
     else:
         print(f"\nDefaulting to /dev/ttyUSB0 - please verify your ESP32 port!")
-        print(f"Linux tip: Run 'ls /dev/ttyUSB* /dev/ttyACM*' to see USB serial devices")
-        return '/dev/ttyUSB0', 115200
+        port_num = input(f"Linux tip: Run 'ls /dev/ttyUSB* /dev/ttyACM*' to see USB serial devices and enter the part including USB or ACM. If not found just hit enter: ")
+        port_desc = '/dev/tty'+port_num
+        if port_desc == '/dev/tty':
+            print("MCU Not Connected")
+            sys.exit(1)
+        return port_desc, 115200
 
 class FaceDrowsinessDetector:
     def __init__(self,port='/dev/ttyUSB0',baud=115200,timeout=1,face_model_path="yolov8m-face.pt",drowsiness_model_path="yolo_drowsiness/yolov8m_cls_drowsy/weights/best.pt"):
