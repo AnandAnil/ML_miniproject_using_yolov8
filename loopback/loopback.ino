@@ -2,8 +2,8 @@
 
 Servo Sprayer;
 
-const int servoPin = 2;
-const int BuzzerPin = 4;
+const int servoPin = 4;
+const int BuzzerPin = 2;
 
 unsigned long stateStartTime = 0;
 unsigned long buzzerTimer = 0;
@@ -145,7 +145,7 @@ void updateStateMachine() {
       break;
       
     case SMELL_ATTACK_SERVO:
-      if (elapsed >= 500) {
+      if (elapsed >= 1000) {
         Sprayer.write(0);
         startHighAlert();
       }
