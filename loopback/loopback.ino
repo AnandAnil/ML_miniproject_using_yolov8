@@ -41,6 +41,9 @@ void handleSerialCommands() {
   if (Serial.available()) {
     char incomingMessage = Serial.read();    
     switch(incomingMessage) {
+      case 'A':
+        Serial.println("SYSTEM_READY");
+        break;
       case 'M':
         if (currentState == IDLE) {
           startMediumAlert();

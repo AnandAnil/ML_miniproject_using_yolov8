@@ -9,7 +9,7 @@ import platform
 
 use_model = 'yolov8m'
 
-def auto_detect_esp32():
+def find_mcu():
     esp32_identifiers = [('CP2102 USB to UART Bridge Controller', 10),('CP210X', 9),('Silicon Labs CP210x', 9),('CH340', 8),('CH341', 8),('USB2.0-Serial', 7),('USB-SERIAL CH340', 8),('QinHeng Electronics', 7)]
     exclusion_patterns = ['BLUETOOTH','BT','WIRELESS','MODEM','FAX','DIAL']
     candidates = []
@@ -37,12 +37,21 @@ def auto_detect_esp32():
             try:
                 ser = serial.Serial(port_device, baud, timeout=1)
                 time.sleep(0.5)
-                ser.write(b'AT\r\n')
+                ser.write('A'.encode())
                 time.sleep(0.2)
-                ser.close()
-                print(f"ESP32 confirmed on {port_device} at {baud} baud")
-                print(f"Device: {desc}")
-                return port_device, baud
+                messages = ''
+                while ser.in_waiting > 0:
+                    try:
+                        message = ser.readline().decode().strip()
+                        if message:
+                            messages += (message)
+                    except:
+                        break
+                if messages == 'SYSTEM_READY':
+                    ser.close()
+                    print(f"ESP32 confirmed on {port_device} at {baud} baud")
+                    print(f"Device: {desc}")
+                    return port_device, baud
             except Exception as e:
                 try:
                     ser.close()
@@ -371,7 +380,7 @@ class FaceDrowsinessDetector:
 def main():
     # Auto-detect ESP32 port with enhanced detection
     print("Starting ESP32 auto-detection...")
-    esp32_port, esp32_baud = auto_detect_esp32()
+    esp32_port, esp32_baud = find_mcu()
     
     print(f"\nConnecting to ESP32...")
     
