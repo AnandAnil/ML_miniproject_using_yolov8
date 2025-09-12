@@ -29,14 +29,15 @@ for port in possible_ports:
         continue
 
 # Send test characters
-test_chars = ['H', 'M', 'N', 'X']
+test_chars = ['A', 'M', 'H', 'S']
 
 for char in test_chars:
+    input(f"Press Enter to send '{char}'...")
     print(f"Sending: {char}")
     ser.write(char.encode())
     
     # Read response
-    time.sleep(0.01)
+    time.sleep(0.1)
     while ser.in_waiting > 0:
         response = ser.readline().decode().strip()
         print(f"Received: {response}")
