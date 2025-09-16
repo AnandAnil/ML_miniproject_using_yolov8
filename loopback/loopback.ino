@@ -3,7 +3,8 @@
 Servo Sprayer;
 
 const int servoPin = 4;
-const int BuzzerPin = 2;
+const int BuzzerPin = 5;
+const int LED=2;
 
 unsigned long stateStartTime = 0;
 unsigned long buzzerTimer = 0;
@@ -28,7 +29,9 @@ void setup() {
   Sprayer.write(0);
   Serial.println("Annoyance Machine Ready");
   pinMode(BuzzerPin, OUTPUT);
+  pinMode(LED,OUTPUT);
   digitalWrite(BuzzerPin, LOW);
+  digitalWrite(LED,LOW);
 }
 
 void loop() {
@@ -78,11 +81,13 @@ void startHighAlert() {
   currentState = HIGH_BUZZER_CONTINUOUS;
   stateStartTime = millis();
   digitalWrite(BuzzerPin, HIGH);
+  digitalWrite(LED,HIGH);
 }
 
 void startSmellAttack() {
   Serial.println("Commencing Ultimate Attack - OVERRIDE ALL");
   digitalWrite(BuzzerPin, LOW);
+  digitalWrite(LED,LOW);
   currentState = SMELL_ATTACK_SERVO;
   stateStartTime = millis();
   Sprayer.write(180);
@@ -101,10 +106,12 @@ void updateStateMachine() {
       if (buzzerCount < maxBuzzerCount) {
         if (!buzzerActive && buzzerElapsed >= 1000) {
           digitalWrite(BuzzerPin, HIGH);
+          digitalWrite(LED,HIGH);
           buzzerActive = true;
           buzzerTimer = currentMillis;
         } else if (buzzerActive && buzzerElapsed >= 500) {
           digitalWrite(BuzzerPin, LOW);
+          digitalWrite(LED,LOW);
           buzzerActive = false;
           buzzerCount++;
           buzzerTimer = currentMillis;
@@ -112,12 +119,14 @@ void updateStateMachine() {
       } else {
         currentState = IDLE;
         digitalWrite(BuzzerPin, LOW);
+        digitalWrite(LED,LOW);
       }
       break;
       
     case HIGH_BUZZER_CONTINUOUS:
       if (elapsed >= 3000) {
         digitalWrite(BuzzerPin, LOW);
+        digitalWrite(LED,LOW);
         currentState = HIGH_BUZZER_PULSED;
         stateStartTime = currentMillis;
         buzzerTimer = currentMillis;
@@ -130,10 +139,12 @@ void updateStateMachine() {
       if (buzzerCount < maxBuzzerCount) {
         if (!buzzerActive && buzzerElapsed >= 1000) {
           digitalWrite(BuzzerPin, HIGH);
+          digitalWrite(LED,HIGH);
           buzzerActive = true;
           buzzerTimer = currentMillis;
         } else if (buzzerActive && buzzerElapsed >= 500) {
           digitalWrite(BuzzerPin, LOW);
+          digitalWrite(LED,LOW);
           buzzerActive = false;
           buzzerCount++;
           buzzerTimer = currentMillis;
@@ -141,6 +152,7 @@ void updateStateMachine() {
       } else {
         currentState = IDLE;
         digitalWrite(BuzzerPin, LOW);
+        digitalWrite(LED,LOW);
       }
       break;
       
